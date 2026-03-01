@@ -1,0 +1,47 @@
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "types": ["node"],
+    "target": "ES2022",
+    "emitDecoratorMetadata": true,
+
+    /* Modules */
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "outDir": "dist",
+    "rootDir": "src",
+
+    /* JavaScript Support */
+    "allowJs": true,
+    "checkJs": false,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": false,
+    "noEmit": false,
+    "noEmitOnError": false,
+
+    /* Type Checking */
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
+    "strictPropertyInitialization": false,
+    "noImplicitThis": false,
+    "skipLibCheck": true,
+    "inlineSources": true,
+    "ignoreDeprecations": "5.0",
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": false,
+    "noImplicitReturns": false,
+    "noErrorTruncation": false,
+    
+    /* Additional Relaxed Settings */
+    "useUnknownInCatchVariables": false,
+    "exactOptionalPropertyTypes": false
+  },
+  "include": ["*.ts", "src/**/*"],
+  "exclude": [".babelrc", "node_modules", "dist"]
+}
