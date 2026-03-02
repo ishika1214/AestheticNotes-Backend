@@ -22,7 +22,7 @@ async function startServer() {
   // ✅ Enable CORS
   app.use(
     cors({
-      origin: "http://localhost:5173",
+      origin: ["http://localhost:5173", "https://aesthetic-notes-zeta.vercel.app"],
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
       credentials: true,
     })
