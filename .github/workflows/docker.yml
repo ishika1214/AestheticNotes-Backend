@@ -24,4 +24,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: ishika1214/aesthetic-notes-backend:latest
+          tags: |
+            ishika1214/aesthetic-notes-backend:${{ github.sha }}
+            ishika1214/aesthetic-notes-backend:latest
