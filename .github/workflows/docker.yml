@@ -27,3 +27,6 @@ jobs:
           tags: |
             ishika1214/aesthetic-notes-backend:${{ github.sha }}
             ishika1214/aesthetic-notes-backend:latest
+      - name: Trigger Render Deploy
+        run: |
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
