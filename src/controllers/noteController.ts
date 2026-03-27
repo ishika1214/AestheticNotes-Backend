@@ -67,3 +67,21 @@ export const deleteNote = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+export const bulkDeleteNotes = async (req: AuthRequest, res: Response) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: 'Invalid or empty IDs array' });
+    }
+
+    const result = await Note.deleteMany({
+      _id: { $in: ids },
+      user: req.user?.id
+    });
+
+    res.json({ message: `${result.deletedCount} notes deleted successfully` });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
