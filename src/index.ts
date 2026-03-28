@@ -4,6 +4,7 @@ import cors from "cors";
 import { connectDB } from "./config/db";
 import authRoutes from "./routes/authRoutes";
 import noteRoutes from "./routes/noteRoutes";
+import aiRoutes from "./routes/aiRoutes";
 
 
 const envFile =
@@ -22,7 +23,7 @@ async function startServer() {
   // ✅ Enable CORS
   app.use(
     cors({
-      origin: ["http://localhost:5173", "https://aesthetic-notes-zeta.vercel.app"],
+      origin: ["http://localhost:5173", "http://localhost:5174", "https://aesthetic-notes-zeta.vercel.app"],
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
       credentials: true,
     })
@@ -33,6 +34,7 @@ async function startServer() {
   // API Routes
   app.use("/api/auth", authRoutes);
   app.use("/api/notes", noteRoutes);
+  app.use("/api/ai", aiRoutes);
 
   app.get("/", (_req, res) => {
     res.send("AestheticNotes Backend is running 🚀");

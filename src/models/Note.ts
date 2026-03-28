@@ -1,5 +1,10 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
+export interface IReminder {
+  text: string;
+  date: Date;
+}
+
 export interface INote extends Document {
   user: mongoose.Types.ObjectId;
   title: string;
@@ -10,6 +15,12 @@ export interface INote extends Document {
   is_pinned: boolean;
   cover_image: string | null;
   tags: string[];
+  embedding: number[];
+  autoTitle: string;
+  summary: string;
+  voiceText: string;
+  tasks: string[];
+  reminders: IReminder[];
   created_at: Date;
   updated_at: Date;
 }
@@ -24,8 +35,22 @@ const NoteSchema: Schema = new Schema({
   is_pinned: { type: Boolean, default: false },
   cover_image: { type: String, default: null },
   tags: [{ type: String }],
+  embedding: { type: [Number], default: [] },
+  autoTitle: { type: String, default: "" },
+  summary: { type: String, default: "" },
+  voiceText: { type: String, default: "" },
+  tasks: [{ type: String }],
+  reminders: [
+    {
+      text: String,
+      date: Date,
+    }
+  ],
 }, {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
 });
+
+// For Atlas Vector Search or similar capabilities
+NoteSchema.index({ embedding: "vector" as any });
 
 export default mongoose.model<INote>('Note', NoteSchema);

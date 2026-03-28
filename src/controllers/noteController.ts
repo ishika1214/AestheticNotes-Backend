@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import Note from '../models/Note';
 import { AuthRequest } from '../middleware/auth';
+import * as aiService from '../services/aiService';
 
 export const getNotes = async (req: AuthRequest, res: Response) => {
   try {
@@ -35,8 +36,23 @@ export const createNote = async (req: AuthRequest, res: Response) => {
       cover_image,
       tags
     });
+
     await note.save();
     res.status(201).json(note);
+
+    // Generate embedding for RAG asynchronously
+    const contentText = `${title || ''} ${content || ''}`;
+    if (contentText.trim()) {
+      try {
+        const embedding = await aiService.generateEmbedding(contentText);
+        if (embedding && embedding.length > 0) {
+          note.embedding = embedding;
+          await note.save();
+        }
+      } catch (e) {
+        console.error("Embedding generation failed during create:", e);
+      }
+    }
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -51,7 +67,22 @@ export const updateNote = async (req: AuthRequest, res: Response) => {
       { returnDocument: "after" }
     );
     if (!note) return res.status(404).json({ message: 'Note not found' });
+
     res.json(note);
+
+    // Update embedding if title or content changed, doing so asynchronously
+    if (req.body.title !== undefined || req.body.content !== undefined) {
+      const contentText = `${note.title || ''} ${note.content || ''}`;
+      try {
+        const embedding = await aiService.generateEmbedding(contentText);
+        if (embedding && embedding.length > 0) {
+          note.embedding = embedding;
+          await note.save();
+        }
+      } catch (e) {
+        console.error("Embedding generation failed during update:", e);
+      }
+    }
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
