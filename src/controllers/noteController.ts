@@ -24,7 +24,7 @@ export const getTags = async (req: AuthRequest, res: Response) => {
 
 export const createNote = async (req: AuthRequest, res: Response) => {
   try {
-    const { title, content, emoji, color, is_public, is_pinned, cover_image, tags } = req.body;
+    const { title, content, emoji, color, is_public, is_pinned, cover_image, tags, type, sections } = req.body;
     const note = new Note({
       user: req.user?.id,
       title,
@@ -34,14 +34,17 @@ export const createNote = async (req: AuthRequest, res: Response) => {
       is_public,
       is_pinned,
       cover_image,
-      tags
+      tags,
+      type,
+      sections
     });
 
     await note.save();
     res.status(201).json(note);
 
     // Generate embedding for RAG asynchronously
-    const contentText = `${title || ''} ${content || ''}`;
+    const sectionsText = (sections || []).map((s: any) => `${s.title || ''} ${s.content || ''}`).join(' ');
+    const contentText = `${title || ''} ${content || ''} ${sectionsText}`;
     if (contentText.trim()) {
       try {
         const embedding = await aiService.generateEmbedding(contentText);
@@ -70,9 +73,10 @@ export const updateNote = async (req: AuthRequest, res: Response) => {
 
     res.json(note);
 
-    // Update embedding if title or content changed, doing so asynchronously
-    if (req.body.title !== undefined || req.body.content !== undefined) {
-      const contentText = `${note.title || ''} ${note.content || ''}`;
+    // Update embedding if title, content, or sections changed
+    if (req.body.title !== undefined || req.body.content !== undefined || req.body.sections !== undefined) {
+      const sectionsText = (note.sections || []).map((s: any) => `${s.title || ''} ${s.content || ''}`).join(' ');
+      const contentText = `${note.title || ''} ${note.content || ''} ${sectionsText}`;
       try {
         const embedding = await aiService.generateEmbedding(contentText);
         if (embedding && embedding.length > 0) {

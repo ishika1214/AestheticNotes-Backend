@@ -21,6 +21,8 @@ export interface INote extends Document {
   voiceText: string;
   tasks: string[];
   reminders: IReminder[];
+  type: 'note' | 'novel' | 'diary';
+  sections: { title: string; content: string; date?: Date }[];
   created_at: Date;
   updated_at: Date;
 }
@@ -43,6 +45,14 @@ const NoteSchema: Schema = new Schema({
   reminders: [
     {
       text: String,
+      date: Date,
+    }
+  ],
+  type: { type: String, enum: ['note', 'novel', 'diary'], default: 'note' },
+  sections: [
+    {
+      title: String,
+      content: String,
       date: Date,
     }
   ],

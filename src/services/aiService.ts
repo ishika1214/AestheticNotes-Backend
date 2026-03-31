@@ -18,6 +18,35 @@ export const generateEmbedding = async (text: string): Promise<number[]> => {
   }
 };
 
+const cleanAIResponse = (text: string) => {
+  // Remove markdown code blocks and any leading/trailing backticks
+  let cleaned = text.replace(/```[a-z]*\s*([\s\S]*?)\s*```/gi, '$1');
+  cleaned = cleaned.replace(/```/g, '').trim();
+  return cleaned;
+};
+
+const extractJSON = (text: string) => {
+  console.log("--- RAW AI RESPONSE ---", text);
+  try {
+    // Strategy 1: Find the first '{' and last '}'
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    
+    if (start !== -1 && end !== -1) {
+      const candidate = text.substring(start, end + 1);
+      const parsed = JSON.parse(candidate);
+      console.log("--- PARSED JSON SUCCESS ---");
+      return parsed;
+    }
+    
+    // Strategy 2: Clean and try (for simple strings or non-braced responses)
+    return cleanAIResponse(text);
+  } catch (e) {
+    console.error("--- JSON PARSE FAILED, FALLING BACK TO CLEANED STRING ---");
+    return cleanAIResponse(text);
+  }
+};
+
 export const summarizeNote = async (content: string) => {
   const prompt = `
     Summarize the following note content. 
@@ -28,11 +57,13 @@ export const summarizeNote = async (content: string) => {
     
     Format the response as JSON with keys: "summary", "keyPoints" (array), "actionItems" (array).
     
+    IMPORTANT: Return ONLY the JSON object. Do not include markdown code blocks (like \`\`\`json), backticks, or any other text before or after the JSON.
+    
     Content: ${content}
   `;
 
   const result = await model.generateContent(prompt);
-  return result.response.text();
+  return extractJSON(result.response.text());
 };
 
 export const generateTitle = async (content: string) => {
@@ -40,11 +71,13 @@ export const generateTitle = async (content: string) => {
     Based on the following note content, generate a short, catchy, and meaningful title (max 6 words).
     Return ONLY the title string, no quotes or prefix.
     
+    IMPORTANT: Return ONLY the title string. Do not use markdown code blocks or backticks.
+    
     Content: ${content}
   `;
 
   const result = await model.generateContent(prompt);
-  return result.response.text().trim();
+  return cleanAIResponse(result.response.text());
 };
 
 export const generateTags = async (content: string) => {
@@ -52,11 +85,14 @@ export const generateTags = async (content: string) => {
     Analyze the following note content and suggest 3-7 relevant tags.
     Return ONLY a comma-separated list of tags (no hashtags).
     
+    IMPORTANT: Return ONLY the tags. Do not use markdown code blocks or backticks.
+    
     Content: ${content}
   `;
 
   const result = await model.generateContent(prompt);
-  return result.response.text().trim().split(',').map(tag => tag.trim());
+  const text = cleanAIResponse(result.response.text());
+  return text.split(',').map(tag => tag.trim());
 };
 
 export const cleanupFormatting = async (content: string) => {
@@ -69,11 +105,13 @@ export const cleanupFormatting = async (content: string) => {
     
     Return the formatted HTML content.
     
+    IMPORTANT: Return ONLY the HTML. Do not use markdown code blocks or backticks.
+    
     Content: ${content}
   `;
 
   const result = await model.generateContent(prompt);
-  return result.response.text();
+  return cleanAIResponse(result.response.text());
 };
 
 export const rewriteNote = async (content: string, mode: 'professional' | 'shorter' | 'cleaner' | 'bullets' | 'tasks') => {
@@ -90,11 +128,13 @@ export const rewriteNote = async (content: string, mode: 'professional' | 'short
     Maintain the core message.
     Return the result in HTML format.
     
+    IMPORTANT: Return ONLY the result. Do not use markdown code blocks or backticks.
+    
     Content: ${content}
   `;
 
   const result = await model.generateContent(prompt);
-  return result.response.text();
+  return cleanAIResponse(result.response.text());
 };
 
 export const extractTasks = async (content: string) => {
@@ -107,11 +147,13 @@ export const extractReminders = async (content: string) => {
     Format the response as a JSON array of objects with keys: "text" (the reminder description) and "date" (ISO 8601 string). 
     If no dates are found, return an empty array [].
     
+    IMPORTANT: Return ONLY the JSON. Do not use markdown code blocks or backticks.
+    
     Content: ${content}
   `;
 
   const result = await model.generateContent(prompt);
-  return result.response.text();
+  return extractJSON(result.response.text());
 };
 
 export const generateDiagram = async (content: string, type: 'flowchart' | 'sequence' = 'flowchart') => {
@@ -119,11 +161,13 @@ export const generateDiagram = async (content: string, type: 'flowchart' | 'sequ
     Convert the following note content into a Mermaid.js ${type}.
     Return ONLY the diagram code, no "mermaid" prefix or markdown blocks.
     
+    IMPORTANT: Return ONLY the diagram code. Do not use markdown code blocks or backticks.
+    
     Content: ${content}
   `;
 
   const result = await model.generateContent(prompt);
-  return result.response.text();
+  return cleanAIResponse(result.response.text());
 };
 
 export const cosineSimilarity = (vecA: number[], vecB: number[]) => {
@@ -156,9 +200,6 @@ export const chatWithNotes = async (
     4. You can reference specific notes by their title.
   `;
 
-  // We'll use startChat to handle history properly if needed, 
-  // but since we're injecting custom system context with RAG, 
-  // we'll rebuild the history as a single prompt or use the chat API.
   const chat = model.startChat({
     history: history.map(h => ({
       role: h.role === 'model' ? 'model' : 'user',
