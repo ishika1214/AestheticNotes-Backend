@@ -84,7 +84,7 @@ export const extractReminders = async (req: AuthRequest, res: Response) => {
   try {
     const { content } = req.body;
     const result = await aiService.extractReminders(content);
-    res.json({ result: JSON.parse(result) });
+    res.json({ result });
   } catch (err) {
     console.error("extractReminders error:", err);
     res.status(500).json({ message: 'AI Reminder Extraction error' });
