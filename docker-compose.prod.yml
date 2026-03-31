@@ -1,10 +1,11 @@
-version: "3.9"
-
 services:
   backend:
-    image: your-dockerhub-username/aesthetic-notes-backend:latest
+    build: .
+    image: ishika1214/aesthetic-notes-backend:prod
     ports:
       - "5000:5000"
+    env_file:
+      - .env.prod
     environment:
       NODE_ENV: production
       MONGODB_URI: ${MONGODB_URI}
